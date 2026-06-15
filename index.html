@@ -788,8 +788,28 @@ function showPubs(e,cat){
   }
 
   window.addEventListener('resize',()=>{cancelAnimationFrame(rafId);resize();rafId=requestAnimationFrame(draw);});
+
+  // Pause animation when tab is hidden — stops the endless loading spinner
+  // and saves CPU when the visitor switches tabs
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){
+      cancelAnimationFrame(rafId);
+    } else {
+      last=0;
+      rafId=requestAnimationFrame(draw);
+    }
+  });
+
   resize();
   rafId = requestAnimationFrame(draw);
+
+  // Stop the browser "loading" spinner after first paint
+  // The canvas animation runs independently via rAF and doesn't need the
+  // page to remain in a loading state
+  window.addEventListener('load',()=>{
+    // Signal to the browser that the page is fully ready
+    if(window.stop) window.stop();
+  });
 })();
 </script>
 </body>
