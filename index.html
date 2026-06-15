@@ -753,39 +753,43 @@ function showPubs(e,cat){
   function resize(){
     W=c.width=window.innerWidth;
     H=c.height=window.innerHeight;
-    lines=Array.from({length:22},(_,i)=>({
-      yBase: H*0.04 + i*(H/22),
-      amp:   6 + Math.random()*18,
-      freq:  0.004 + Math.random()*0.005,
+    lines=Array.from({length:24},(_,i)=>({
+      yBase: H*0.03 + i*(H/24),
+      amp:   8  + Math.random()*22,
+      freq:  0.003 + Math.random()*0.004,
       phase: Math.random()*Math.PI*2,
-      speed: 0.006 + Math.random()*0.008,
-      alpha: 0.06 + Math.random()*0.13
+      speed: 0.5  + Math.random()*0.7,   // units per second — clearly visible
+      alpha: 0.09 + Math.random()*0.17
     }));
   }
 
-  let t=0;
-  function draw(){
+  // Delta-time animation: speed is in units/second, not units/frame
+  // This ensures consistent motion regardless of display refresh rate
+  let t=0, last=0, rafId;
+  function draw(ts){
+    const dt = Math.min((ts - last) / 1000, 0.05); // seconds elapsed, capped at 50ms
+    last = ts;
+    t += dt;
     ctx.clearRect(0,0,W,H);
-    t+=0.008;
     lines.forEach(l=>{
       ctx.beginPath();
-      for(let x=0;x<=W;x+=3){
+      for(let x=0;x<=W;x+=4){
         const y = l.yBase
-          + Math.sin(x*l.freq + t*l.speed*8 + l.phase)*l.amp
-          + Math.sin(x*0.012 + t*0.35)*5
-          + Math.cos(x*0.003 + t*0.18)*8;
+          + Math.sin(x*l.freq + t*l.speed + l.phase)*l.amp
+          + Math.sin(x*0.008 + t*0.7)*6
+          + Math.cos(x*0.002 + t*0.4)*10;
         x===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
       }
       ctx.strokeStyle=`rgba(61,186,110,${l.alpha})`;
       ctx.lineWidth=1;
       ctx.stroke();
     });
-    requestAnimationFrame(draw);
+    rafId = requestAnimationFrame(draw);
   }
 
-  window.addEventListener('resize',resize);
+  window.addEventListener('resize',()=>{cancelAnimationFrame(rafId);resize();rafId=requestAnimationFrame(draw);});
   resize();
-  draw();
+  rafId = requestAnimationFrame(draw);
 })();
 </script>
 </body>
